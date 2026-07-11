@@ -432,10 +432,13 @@ function answerQuiz(i, btn) {
   const q = list[index];
   const allBtns = document.querySelectorAll(".quiz-opt");
   allBtns.forEach(b => b.disabled = true);
+  let nextDelay = 900;
   if (i === q.answer) {
     btn.classList.add("correct");
     state.quiz.correct++;
     playCorrectSound();
+    setTimeout(() => speak(q.options[q.answer], 0.78), 1000);
+    nextDelay = 2300;
   } else {
     btn.classList.add("wrong");
     allBtns[q.answer].classList.add("correct");
@@ -444,7 +447,7 @@ function answerQuiz(i, btn) {
   setTimeout(() => {
     state.quiz.index++;
     renderQuizQuestion();
-  }, 900);
+  }, nextDelay);
 }
 
 function finishQuiz() {
@@ -514,9 +517,19 @@ function answerReview(i, btn) {
   const q = list[index];
   const allBtns = document.querySelectorAll(".quiz-opt");
   allBtns.forEach(b => b.disabled = true);
-  if (i === q.answer) { btn.classList.add("correct"); state.quiz.correct++; playCorrectSound(); }
-  else { btn.classList.add("wrong"); allBtns[q.answer].classList.add("correct"); playWrongSound(); }
-  setTimeout(() => { state.quiz.index++; renderQuizQuestionReview(); }, 900);
+  let nextDelay = 900;
+  if (i === q.answer) {
+    btn.classList.add("correct");
+    state.quiz.correct++;
+    playCorrectSound();
+    setTimeout(() => speak(q.options[q.answer], 0.78), 1000);
+    nextDelay = 2300;
+  } else {
+    btn.classList.add("wrong");
+    allBtns[q.answer].classList.add("correct");
+    playWrongSound();
+  }
+  setTimeout(() => { state.quiz.index++; renderQuizQuestionReview(); }, nextDelay);
 }
 
 function finishReview() {
