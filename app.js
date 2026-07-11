@@ -63,12 +63,19 @@ if ("speechSynthesis" in window) {
 
 function pickEnglishVoice() {
   if (!cachedVoices.length) return null;
-  // Uu tien giong US, sau do bat ky giong tieng Anh nao
+  const enVoices = cachedVoices.filter(v => v.lang && v.lang.toLowerCase().startsWith("en"));
+  if (!enVoices.length) return null;
+  // Uu tien giong chat luong cao (Enhanced/Premium/Neural) neu may co san
+  const qualityKeywords = ["enhanced", "premium", "neural", "natural", "wavenet"];
+  const highQuality = enVoices.find(v =>
+    qualityKeywords.some(k => (v.name || "").toLowerCase().includes(k))
+  );
+  if (highQuality) return highQuality;
+  // Sau do uu tien giong US chuan
   return (
-    cachedVoices.find(v => v.lang === "en-US") ||
-    cachedVoices.find(v => v.lang && v.lang.toLowerCase().startsWith("en-us")) ||
-    cachedVoices.find(v => v.lang && v.lang.toLowerCase().startsWith("en")) ||
-    null
+    enVoices.find(v => v.lang === "en-US") ||
+    enVoices.find(v => v.lang.toLowerCase().startsWith("en-us")) ||
+    enVoices[0]
   );
 }
 
