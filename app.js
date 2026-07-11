@@ -88,7 +88,6 @@ function init() {
   const p = loadProfile();
   if (p) {
     state.profile = p;
-    document.getElementById("student-name-display").textContent = p.name;
     goHome();
   } else {
     showScreen("screen-login");
@@ -108,7 +107,6 @@ function onLogin(e) {
     if (!name) return;
     state.profile = { name, cls };
     saveProfile(state.profile);
-    document.getElementById("student-name-display").textContent = name;
     goHome();
     updateStampCount();
     if (storageBlocked) {
