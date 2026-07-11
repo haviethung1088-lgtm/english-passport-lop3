@@ -44,13 +44,63 @@ function getUnitProgress(id) {
 }
 
 // ---------- TTS ----------
-function speak(text) {
+// Danh sach giong doc, nap bat dong bo tren nhieu trinh duyet di dong
+let cachedVoices = [];
+let voicesReady = false;
+
+function loadVoices() {
   if (!("speechSynthesis" in window)) return;
+  const v = window.speechSynthesis.getVoices();
+  if (v && v.length) {
+    cachedVoices = v;
+    voicesReady = true;
+  }
+}
+if ("speechSynthesis" in window) {
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+
+function pickEnglishVoice() {
+  if (!cachedVoices.length) return null;
+  // Uu tien giong US, sau do bat ky giong tieng Anh nao
+  return (
+    cachedVoices.find(v => v.lang === "en-US") ||
+    cachedVoices.find(v => v.lang && v.lang.toLowerCase().startsWith("en-us")) ||
+    cachedVoices.find(v => v.lang && v.lang.toLowerCase().startsWith("en")) ||
+    null
+  );
+}
+
+function speakNow(text) {
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = "en-US";
   u.rate = 0.9;
+  const voice = pickEnglishVoice();
+  if (voice) u.voice = voice;
   window.speechSynthesis.speak(u);
+}
+
+function speak(text) {
+  if (!("speechSynthesis" in window)) return;
+  if (voicesReady) {
+    speakNow(text);
+  } else {
+    // Tren mot so trinh duyet di dong, danh sach giong chua nap kip
+    // -> thu nap lai va doi toi da ~600ms truoc khi doc
+    loadVoices();
+    if (voicesReady) { speakNow(text); return; }
+    let waited = 0;
+    const timer = setInterval(() => {
+      loadVoices();
+      waited += 100;
+      if (voicesReady || waited >= 600) {
+        clearInterval(timer);
+        speakNow(text);
+      }
+    }, 100);
+  }
 }
 
 // ---------- Screen navigation ----------
