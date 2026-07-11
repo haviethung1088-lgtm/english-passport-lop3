@@ -328,7 +328,7 @@ function renderUnitContent(unit) {
   readingBox.querySelector(".say-btn").addEventListener("click", () => speak(unit.reading.text));
 
   document.getElementById("practice-ext-info").textContent =
-    `${unit.quizExt.length} c\u00e2u nâng cao + ${unit.reading.questions.length} c\u00e2u \u0111\u1ecdc hi\u1ec3u.`;
+    `${unit.quizExt.length} c\u00e2u n\u00e2ng cao + ${unit.reading.questions.length} c\u00e2u \u0111\u1ecdc hi\u1ec3u.`;
 }
 
 function makeFlashcard(word) {
