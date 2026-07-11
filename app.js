@@ -176,9 +176,13 @@ function onLogin(e) {
 }
 
 function onLogout() {
-  if (!confirm("\u0110\u1ed5i h\u1ecdc sinh kh\u00e1c? Ti\u1ebfn \u0111\u1ed9 v\u1eabn \u0111\u01b0\u1ee3c l\u01b0u tr\u00ean m\u00e1y n\u00e0y.")) return;
+  if (!confirm("\u0110\u1ed5i h\u1ecdc sinh kh\u00e1c? To\u00e0n b\u1ed9 ti\u1ebfn \u0111\u1ed9 (sao, k\u1ebft qu\u1ea3) c\u1ee7a h\u1ecdc sinh hi\u1ec7n t\u1ea1i s\u1ebd b\u1ecb x\u00f3a kh\u1ecfi thi\u1ebft b\u1ecb n\u00e0y v\u00e0 kh\u00f4ng th\u1ec3 kh\u00f4i ph\u1ee5c. B\u1ea1n c\u00f3 ch\u1eafc ch\u1eafn mu\u1ed1n ti\u1ebfp t\u1ee5c?")) return;
   localStorage.removeItem(STORAGE_PROFILE);
+  localStorage.removeItem(STORAGE_PROGRESS);
+  memoryFallback.profile = null;
+  memoryFallback.progress = null;
   state.profile = null;
+  state.progress = {};
   showScreen("screen-login");
 }
 
