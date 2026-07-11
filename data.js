@@ -80,7 +80,8 @@ const UNITS = [
     patterns: [
       { en: "Hello! I'm Mai.", vi: "Xin chào! Tớ là Mai." },
       { en: "Hi. How are you? – Fine, thank you.", vi: "Chào cậu. Cậu khỏe không? – Tớ khỏe, cảm ơn." },
-      { en: "Goodbye! / Bye!", vi: "Tạm biệt!" },
+      { en: "Goodbye!", vi: "Tạm biệt!" },
+      { en: "Bye!", vi: "Tạm biệt nhé!" },
     ],
     ext: [
       { en: "nice to meet you", vi: "rất vui được gặp bạn", icon: "🤝" },
@@ -180,8 +181,10 @@ const UNITS = [
       { en: "teacher", vi: "giáo viên", icon: "👩‍🏫" },
     ],
     patterns: [
-      { en: "This is Nam. / That's my friend.", vi: "Đây là Nam. / Kia là bạn của tớ." },
-      { en: "Is this your teacher? – Yes, it is. / No, it isn't.", vi: "Đây có phải là giáo viên của bạn không? – Đúng vậy. / Không phải." },
+      { en: "This is Nam.", vi: "Đây là Nam." },
+      { en: "That's my friend.", vi: "Kia là bạn của tớ." },
+      { en: "Is this your teacher? – Yes, it is.", vi: "Đây có phải là giáo viên của bạn không? – Đúng vậy." },
+      { en: "Is this your teacher? – No, it isn't.", vi: "Đây có phải là giáo viên của bạn không? – Không phải." },
     ],
     ext: [
       { en: "best friend", vi: "bạn thân nhất", icon: "💖" },
@@ -334,7 +337,8 @@ const UNITS = [
       { en: "computer room", vi: "phòng vi tính", icon: "💻" },
     ],
     patterns: [
-      { en: "Is this our classroom? – Yes, it is. / No, it isn't.", vi: "Đây có phải là phòng học của chúng ta không? – Đúng vậy. / Không phải." },
+      { en: "Is this our classroom? – Yes, it is.", vi: "Đây có phải là phòng học của chúng ta không? – Đúng vậy." },
+      { en: "Is this our classroom? – No, it isn't.", vi: "Đây có phải là phòng học của chúng ta không? – Không phải." },
       { en: "Let's go to the library. – OK, let's go.", vi: "Hãy đến thư viện đi. – Được, đi thôi." },
     ],
     ext: [
@@ -384,7 +388,8 @@ const UNITS = [
     ],
     patterns: [
       { en: "Stand up, please!", vi: "Mời em đứng lên." },
-      { en: "May I come in? – Yes, you can. / No, you can't.", vi: "Em có thể vào không ạ? – Được. / Không được." },
+      { en: "May I come in? – Yes, you can.", vi: "Em có thể vào không ạ? – Được." },
+      { en: "May I come in? – No, you can't.", vi: "Em có thể vào không ạ? – Không được." },
     ],
     ext: [
       { en: "work in pairs", vi: "làm việc theo cặp", icon: "👥" },
@@ -435,7 +440,8 @@ const UNITS = [
     ],
     patterns: [
       { en: "I have a ruler.", vi: "Tớ có một cây thước." },
-      { en: "Do you have a pencil case? – Yes, I do. / No, I don't.", vi: "Bạn có hộp bút không? – Có. / Không." },
+      { en: "Do you have a pencil case? – Yes, I do.", vi: "Bạn có hộp bút không? – Có." },
+      { en: "Do you have a pencil case? – No, I don't.", vi: "Bạn có hộp bút không? – Không." },
     ],
     ext: [
       { en: "glue stick", vi: "keo dán", icon: "🧴" },
@@ -640,7 +646,8 @@ const UNITS = [
     ],
     patterns: [
       { en: "What's his job? – He's a doctor.", vi: "Nghề nghiệp của anh ấy là gì? – Anh ấy là bác sĩ." },
-      { en: "Is she a nurse? – Yes, she is. / No, she isn't.", vi: "Cô ấy là y tá phải không? – Đúng vậy. / Không phải." },
+      { en: "Is she a nurse? – Yes, she is.", vi: "Cô ấy là y tá phải không? – Đúng vậy." },
+      { en: "Is she a nurse? – No, she isn't.", vi: "Cô ấy là y tá phải không? – Không phải." },
     ],
     ext: [
       { en: "engineer", vi: "kỹ sư", icon: "👷" },
@@ -844,7 +851,8 @@ const UNITS = [
       { en: "many", vi: "nhiều", icon: "🔢" },
     ],
     patterns: [
-      { en: "Do you have any pets? – Yes, I do. / No, I don't.", vi: "Bạn có nuôi thú cưng nào không? – Có. / Không." },
+      { en: "Do you have any pets? – Yes, I do.", vi: "Bạn có nuôi thú cưng nào không? – Có." },
+      { en: "Do you have any pets? – No, I don't.", vi: "Bạn có nuôi thú cưng nào không? – Không." },
       { en: "How many pets do you have? – I have two.", vi: "Bạn có bao nhiêu thú cưng? – Tớ có hai con." },
     ],
     ext: [
