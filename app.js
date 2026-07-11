@@ -14,14 +14,29 @@ let state = {
 };
 
 // ---------- Storage helpers ----------
+// Du phong bo nho tam trong RAM neu trinh duyet chan localStorage
+// (che do rieng tu, cai dat chan cookie/luu tru...)
+let memoryFallback = { profile: null, progress: null };
+let storageBlocked = false;
+
 function loadProfile() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_PROFILE)); } catch (e) { return null; }
+  try { return JSON.parse(localStorage.getItem(STORAGE_PROFILE)); }
+  catch (e) { storageBlocked = true; return memoryFallback.profile; }
 }
-function saveProfile(p) { localStorage.setItem(STORAGE_PROFILE, JSON.stringify(p)); }
+function saveProfile(p) {
+  memoryFallback.profile = p;
+  try { localStorage.setItem(STORAGE_PROFILE, JSON.stringify(p)); }
+  catch (e) { storageBlocked = true; }
+}
 function loadProgress() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_PROGRESS)) || {}; } catch (e) { return {}; }
+  try { return JSON.parse(localStorage.getItem(STORAGE_PROGRESS)) || {}; }
+  catch (e) { storageBlocked = true; return memoryFallback.progress || {}; }
 }
-function saveProgress() { localStorage.setItem(STORAGE_PROGRESS, JSON.stringify(state.progress)); }
+function saveProgress() {
+  memoryFallback.progress = state.progress;
+  try { localStorage.setItem(STORAGE_PROGRESS, JSON.stringify(state.progress)); }
+  catch (e) { storageBlocked = true; }
+}
 
 function getUnitProgress(id) {
   if (!state.progress[id]) state.progress[id] = { stars: 0, coreDone: false, extDone: false };
@@ -87,14 +102,22 @@ function init() {
 
 function onLogin(e) {
   e.preventDefault();
-  const name = document.getElementById("input-name").value.trim();
-  const cls = document.getElementById("input-class").value.trim();
-  if (!name) return;
-  state.profile = { name, cls };
-  saveProfile(state.profile);
-  document.getElementById("student-name-display").textContent = name;
-  goHome();
-  updateStampCount();
+  try {
+    const name = document.getElementById("input-name").value.trim();
+    const cls = document.getElementById("input-class").value.trim();
+    if (!name) return;
+    state.profile = { name, cls };
+    saveProfile(state.profile);
+    document.getElementById("student-name-display").textContent = name;
+    goHome();
+    updateStampCount();
+    if (storageBlocked) {
+      alert("Tr\u00ecnh duy\u1ec7t \u0111ang ch\u1eb7n l\u01b0u tr\u1eef d\u1eef li\u1ec7u (v\u00ed d\u1ee5 ch\u1ebf \u0111\u1ed9 duy\u1ec7t ri\u00eang t\u01b0). Em v\u1eabn h\u1ecdc \u0111\u01b0\u1ee3c b\u00ecnh th\u01b0\u1eddng, nh\u01b0ng ti\u1ebfn \u0111\u1ed9 s\u1ebd m\u1ea5t khi t\u1eaft trang. H\u00e3y d\u00f9ng ch\u1ebf \u0111\u1ed9 duy\u1ec7t web th\u01b0\u1eddng \u0111\u1ec3 l\u01b0u \u0111\u01b0\u1ee3c ti\u1ebfn \u0111\u1ed9.");
+    }
+  } catch (err) {
+    console.error("Login error:", err);
+    alert("C\u00f3 l\u1ed7i x\u1ea3y ra. Vui l\u00f2ng th\u1eed l\u1ea1i ho\u1eb7c \u0111\u1ed5i tr\u00ecnh duy\u1ec7t kh\u00e1c.");
+  }
 }
 
 function onLogout() {
