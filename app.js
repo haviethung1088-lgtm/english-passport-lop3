@@ -2,8 +2,8 @@
 // APP LOGIC - Ho chieu hanh trinh Tieng Anh lop 3
 // ============================================================
 
-const STORAGE_PROFILE = "eaPassport_profile_v1";
-const STORAGE_PROGRESS = "eaPassport_progress_v1";
+const STORAGE_PROFILE = "eaPassport_profile_v2";
+const STORAGE_PROGRESS_PREFIX = "eaPassport_progress_v2_";
 
 let state = {
   profile: null,
@@ -13,10 +13,16 @@ let state = {
   quiz: { list: [], index: 0, correct: 0, mode: "core" },
 };
 
+// Tao ma dinh danh rieng cho tung hoc sinh (dua tren ten + lop)
+// de moi tai khoan luu tien do rieng, khong bi lan sang nhau.
+function makeAccountKey(name, cls) {
+  return (name.trim() + "|" + (cls || "").trim()).toLowerCase();
+}
+
 // ---------- Storage helpers ----------
 // Du phong bo nho tam trong RAM neu trinh duyet chan localStorage
 // (che do rieng tu, cai dat chan cookie/luu tru...)
-let memoryFallback = { profile: null, progress: null };
+let memoryFallback = { profile: null, progressByKey: {} };
 let storageBlocked = false;
 
 function loadProfile() {
@@ -28,13 +34,14 @@ function saveProfile(p) {
   try { localStorage.setItem(STORAGE_PROFILE, JSON.stringify(p)); }
   catch (e) { storageBlocked = true; }
 }
-function loadProgress() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_PROGRESS)) || {}; }
-  catch (e) { storageBlocked = true; return memoryFallback.progress || {}; }
+function loadProgressForKey(key) {
+  try { return JSON.parse(localStorage.getItem(STORAGE_PROGRESS_PREFIX + key)) || {}; }
+  catch (e) { storageBlocked = true; return memoryFallback.progressByKey[key] || {}; }
 }
 function saveProgress() {
-  memoryFallback.progress = state.progress;
-  try { localStorage.setItem(STORAGE_PROGRESS, JSON.stringify(state.progress)); }
+  if (!state.profile || !state.profile.key) return;
+  memoryFallback.progressByKey[state.profile.key] = state.progress;
+  try { localStorage.setItem(STORAGE_PROGRESS_PREFIX + state.profile.key, JSON.stringify(state.progress)); }
   catch (e) { storageBlocked = true; }
 }
 
@@ -79,35 +86,73 @@ function pickEnglishVoice() {
   );
 }
 
-function speakNow(text) {
+// Mo rong vai tu viet tat de TTS doc dung, khong doc nham thanh chu cai roi rac
+function normalizeForSpeech(text) {
+  return text
+    .replace(/\bMr\b\.?/g, "Mister")
+    .replace(/\bMs\b\.?/g, "Miss");
+}
+
+function speakNow(text, rate) {
   window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
+  const u = new SpeechSynthesisUtterance(normalizeForSpeech(text));
   u.lang = "en-US";
-  u.rate = 0.9;
+  u.rate = rate || 0.8;
   const voice = pickEnglishVoice();
   if (voice) u.voice = voice;
   window.speechSynthesis.speak(u);
 }
 
-function speak(text) {
+function speak(text, rate) {
   if (!("speechSynthesis" in window)) return;
   if (voicesReady) {
-    speakNow(text);
+    speakNow(text, rate);
   } else {
     // Tren mot so trinh duyet di dong, danh sach giong chua nap kip
     // -> thu nap lai va doi toi da ~600ms truoc khi doc
     loadVoices();
-    if (voicesReady) { speakNow(text); return; }
+    if (voicesReady) { speakNow(text, rate); return; }
     let waited = 0;
     const timer = setInterval(() => {
       loadVoices();
       waited += 100;
       if (voicesReady || waited >= 600) {
         clearInterval(timer);
-        speakNow(text);
+        speakNow(text, rate);
       }
     }, 100);
   }
+}
+
+// ---------- Am thanh hieu ung dung/sai ----------
+let audioCtx = null;
+function getAudioCtx() {
+  if (audioCtx) return audioCtx;
+  try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+  catch (e) { audioCtx = null; }
+  return audioCtx;
+}
+function playTone(freq, duration, type, startTime, gainPeak) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type || "sine";
+  osc.frequency.value = freq;
+  const t0 = ctx.currentTime + (startTime || 0);
+  gain.gain.setValueAtTime(0.0001, t0);
+  gain.gain.linearRampToValueAtTime(gainPeak || 0.2, t0 + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t0);
+  osc.stop(t0 + duration + 0.03);
+}
+function playCorrectSound() {
+  playTone(880, 0.15, "sine", 0, 0.22);
+  playTone(1175, 0.22, "sine", 0.11, 0.22);
+}
+function playWrongSound() {
+  playTone(220, 0.28, "sawtooth", 0, 0.13);
 }
 
 // ---------- Screen navigation ----------
@@ -141,10 +186,10 @@ function setBottomNav(which) {
 
 // ---------- Init ----------
 function init() {
-  state.progress = loadProgress();
   const p = loadProfile();
-  if (p) {
+  if (p && p.key) {
     state.profile = p;
+    state.progress = loadProgressForKey(p.key);
     goHome();
   } else {
     showScreen("screen-login");
@@ -162,7 +207,9 @@ function onLogin(e) {
     const name = document.getElementById("input-name").value.trim();
     const cls = document.getElementById("input-class").value.trim();
     if (!name) return;
-    state.profile = { name, cls };
+    const key = makeAccountKey(name, cls);
+    state.profile = { name, cls, key };
+    state.progress = loadProgressForKey(key);
     saveProfile(state.profile);
     goHome();
     updateStampCount();
@@ -176,11 +223,9 @@ function onLogin(e) {
 }
 
 function onLogout() {
-  if (!confirm("\u0110\u1ed5i h\u1ecdc sinh kh\u00e1c? To\u00e0n b\u1ed9 ti\u1ebfn \u0111\u1ed9 (sao, k\u1ebft qu\u1ea3) c\u1ee7a h\u1ecdc sinh hi\u1ec7n t\u1ea1i s\u1ebd b\u1ecb x\u00f3a kh\u1ecfi thi\u1ebft b\u1ecb n\u00e0y v\u00e0 kh\u00f4ng th\u1ec3 kh\u00f4i ph\u1ee5c. B\u1ea1n c\u00f3 ch\u1eafc ch\u1eafn mu\u1ed1n ti\u1ebfp t\u1ee5c?")) return;
+  if (!confirm("\u0110\u1ed5i sang h\u1ecdc sinh kh\u00e1c? Ti\u1ebfn \u0111\u1ed9 c\u1ee7a b\u1ea1n \u0111\u00e3 \u0111\u01b0\u1ee3c l\u01b0u v\u00e0 s\u1EBD hi\u1ec7n l\u1ea1i n\u1ebfu \u0111\u0103ng nh\u1eadp l\u1ea1i \u0111\u00fang t\u00ean.")) return;
   localStorage.removeItem(STORAGE_PROFILE);
-  localStorage.removeItem(STORAGE_PROGRESS);
   memoryFallback.profile = null;
-  memoryFallback.progress = null;
   state.profile = null;
   state.progress = {};
   showScreen("screen-login");
@@ -346,7 +391,7 @@ function makeFlashcard(word) {
   `;
   div.addEventListener("click", () => {
     div.classList.toggle("flipped");
-    speak(word.en);
+    speak(word.en, 0.72);
   });
   return div;
 }
@@ -359,6 +404,7 @@ function startQuiz(mode) {
     // append reading comprehension questions
     unit.reading.questions.forEach(q => list.push(q));
   }
+  list = list.map(shuffleQuestionOptions);
   state.quiz = { list, index: 0, correct: 0, mode, unitId: unit.id };
   showScreen("screen-quiz");
   renderQuizQuestion();
@@ -389,9 +435,11 @@ function answerQuiz(i, btn) {
   if (i === q.answer) {
     btn.classList.add("correct");
     state.quiz.correct++;
+    playCorrectSound();
   } else {
     btn.classList.add("wrong");
     allBtns[q.answer].classList.add("correct");
+    playWrongSound();
   }
   setTimeout(() => {
     state.quiz.index++;
@@ -438,7 +486,7 @@ function openReview(reviewId) {
     pool = pool.concat(u.quizCore.map(q => ({ ...q, unit: u.titleEn })));
   });
   // shuffle and take up to 12
-  pool = shuffle(pool).slice(0, 12);
+  pool = shuffle(pool).slice(0, 12).map(shuffleQuestionOptions);
   state.quiz = { list: pool, index: 0, correct: 0, mode: "review", reviewId };
   showScreen("screen-quiz");
   renderQuizQuestionReview();
@@ -466,8 +514,8 @@ function answerReview(i, btn) {
   const q = list[index];
   const allBtns = document.querySelectorAll(".quiz-opt");
   allBtns.forEach(b => b.disabled = true);
-  if (i === q.answer) { btn.classList.add("correct"); state.quiz.correct++; }
-  else { btn.classList.add("wrong"); allBtns[q.answer].classList.add("correct"); }
+  if (i === q.answer) { btn.classList.add("correct"); state.quiz.correct++; playCorrectSound(); }
+  else { btn.classList.add("wrong"); allBtns[q.answer].classList.add("correct"); playWrongSound(); }
   setTimeout(() => { state.quiz.index++; renderQuizQuestionReview(); }, 900);
 }
 
@@ -496,6 +544,15 @@ function shuffle(arr) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+// Xao tron vi tri cac dap an trong 1 cau hoi, giu dung dap an dung
+function shuffleQuestionOptions(q) {
+  const idx = q.options.map((_, i) => i);
+  const shuffledIdx = shuffle(idx);
+  const newOptions = shuffledIdx.map(i => q.options[i]);
+  const newAnswer = shuffledIdx.indexOf(q.answer);
+  return { ...q, options: newOptions, answer: newAnswer };
 }
 
 // ---------- Progress screen ----------
