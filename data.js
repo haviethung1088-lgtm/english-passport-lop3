@@ -10,7 +10,7 @@ const UNITS = [
     group: 1,
     icon: "\u2708\uFE0F",
     titleEn: "Starter",
-    titleVi: "Lam quen",
+    titleVi: "L\u00e0m quen",
     core: [
       { en: "one", vi: "s\u1ed1 1", icon: "1\uFE0F\u20E3" },
       { en: "two", vi: "s\u1ed1 2", icon: "2\uFE0F\u20E3" },
