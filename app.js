@@ -401,31 +401,46 @@ function renderUnitContent(unit) {
   unit.ext.forEach(w => extGrid.appendChild(makeFlashcard(w)));
 
   const grammarBox = document.getElementById("grammar-box");
-  grammarBox.innerHTML = `
-    <h3>\uD83D\uDCD8 ${unit.grammar.title}</h3>
-    <div class="explain">${unit.grammar.explain}</div>
-    <div class="example">${unit.grammar.example}</div>
-  `;
+  grammarBox.innerHTML = "";
+  unit.grammar.forEach(g => {
+    const div = document.createElement("div");
+    div.className = "grammar-box";
+    div.innerHTML = `
+      <h3>\uD83D\uDCD8 ${g.title}</h3>
+      <div class="explain">${g.explain}</div>
+      <div class="example">${g.example}</div>
+    `;
+    grammarBox.appendChild(div);
+  });
 
   const readingBox = document.getElementById("reading-box");
-  readingBox.innerHTML = `
-    <h3>\uD83D\uDCD6 ${unit.reading.title}</h3>
-    <p>${unit.reading.text}</p>
-    <button class="say-btn">\uD83D\uDD0A Nghe b\u00e0i \u0111\u1ecdc</button>
-  `;
-  readingBox.querySelector(".say-btn").addEventListener("click", () => speak(unit.reading.text));
+  readingBox.innerHTML = "";
+  unit.reading.forEach(r => {
+    const div = document.createElement("div");
+    div.className = "reading-box";
+    div.innerHTML = `
+      <h3>\uD83D\uDCD6 ${r.title}</h3>
+      <p>${r.text}</p>
+      <button class="say-btn">\uD83D\uDD0A Nghe b\u00e0i \u0111\u1ecdc</button>
+    `;
+    div.querySelector(".say-btn").addEventListener("click", () => speak(r.text, 0.85));
+    readingBox.appendChild(div);
+  });
 
+  const totalReadingQ = unit.reading.reduce((sum, r) => sum + r.questions.length, 0);
   document.getElementById("practice-ext-info").textContent =
-    `${unit.quizExt.length} c\u00e2u n\u00e2ng cao + ${unit.reading.questions.length} c\u00e2u \u0111\u1ecdc hi\u1ec3u.`;
+    `${unit.quizExt.length} c\u00e2u n\u00e2ng cao + ${totalReadingQ} c\u00e2u \u0111\u1ecdc hi\u1ec3u.`;
 }
 
 function makeFlashcard(word) {
   const div = document.createElement("div");
   div.className = "flash";
+  const ipaHtml = word.ipa ? `<div class="ipa">/${word.ipa}/</div>` : "";
   div.innerHTML = `
     <span class="speak-hint">\uD83D\uDD0A</span>
     <div class="icon">${word.icon || "\uD83D\uDCDD"}</div>
     <div class="en">${word.en}</div>
+    ${ipaHtml}
     <div class="vi">${word.vi}</div>
   `;
   div.addEventListener("click", () => {
@@ -440,8 +455,8 @@ function startQuiz(mode) {
   const unit = UNITS.find(u => u.id === state.currentUnitId);
   let list = mode === "core" ? [...unit.quizCore] : [...unit.quizExt];
   if (mode === "ext") {
-    // append reading comprehension questions
-    unit.reading.questions.forEach(q => list.push(q));
+    // append reading comprehension questions tu tat ca cac bai doc
+    unit.reading.forEach(r => r.questions.forEach(q => list.push(q)));
   }
   list = list.map(shuffleQuestionOptions);
   state.quiz = { list, index: 0, correct: 0, mode, unitId: unit.id };
@@ -529,7 +544,7 @@ function openReview(reviewId) {
     pool = pool.concat(u.quizCore.map(q => ({ ...q, unit: u.titleEn })));
   });
   // shuffle and take up to 12
-  pool = shuffle(pool).slice(0, 12).map(shuffleQuestionOptions);
+  pool = shuffle(pool).slice(0, 20).map(shuffleQuestionOptions);
   state.quiz = { list: pool, index: 0, correct: 0, mode: "review", reviewId };
   showScreen("screen-quiz");
   renderQuizQuestionReview();
