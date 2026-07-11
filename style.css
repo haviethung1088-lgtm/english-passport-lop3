@@ -277,8 +277,10 @@ button {
 .flash:active { transform: scale(0.97); }
 .flash .icon { font-size: 30px; }
 .flash .en { font-family: 'Baloo 2'; font-size: 17px; font-weight: 600; }
+.flash .ipa { font-size: 12.5px; color: var(--ink-soft); font-style: italic; margin-top: -1px; }
 .flash .vi { font-size: 14px; color: var(--sky-deep); display:none; font-weight: 700; }
 .flash.flipped .en { display:none; }
+.flash.flipped .ipa { display:none; }
 .flash.flipped .vi { display:block; }
 .flash .speak-hint { position: absolute; top: 9px; right: 11px; font-size: 14px; opacity:.5; }
 
@@ -294,6 +296,7 @@ button {
 .pattern-card .say-btn { margin-top: 9px; font-size: 13px; background: var(--sky); color:white; border-radius:999px; padding:6px 14px; font-family:'Baloo 2'; font-weight: 600; }
 
 .grammar-box {
+  margin-bottom: 14px;
   background: #FBF0FF;
   border: 2px solid var(--purple);
   border-radius: 15px;
