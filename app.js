@@ -86,6 +86,38 @@ function pickEnglishVoice() {
   );
 }
 
+function pickVietnameseVoice() {
+  if (!cachedVoices.length) return null;
+  return cachedVoices.find(v => v.lang && v.lang.toLowerCase().startsWith("vi")) || null;
+}
+
+// Xay tap tu vung tieng Anh / tieng Viet tu chinh du lieu bai hoc,
+// de nhan biet 1 dap an la tieng Anh hay tieng Viet truoc khi doc.
+const ENGLISH_TEXT_SET = new Set();
+const VIETNAMESE_TEXT_SET = new Set();
+UNITS.forEach(u => {
+  [...u.core, ...u.ext].forEach(w => {
+    if (w.en) ENGLISH_TEXT_SET.add(w.en.trim().toLowerCase());
+    if (w.vi) VIETNAMESE_TEXT_SET.add(w.vi.trim().toLowerCase());
+  });
+  u.patterns.forEach(p => {
+    if (p.en) ENGLISH_TEXT_SET.add(p.en.trim().toLowerCase());
+    if (p.vi) VIETNAMESE_TEXT_SET.add(p.vi.trim().toLowerCase());
+  });
+});
+
+function hasVietnameseDiacritics(s) {
+  return /[\u00C0-\u1EF9]/.test(s);
+}
+
+// Tra ve "en-US" hoac "vi-VN" tuy vao noi dung dap an
+function detectAnswerLang(text) {
+  const t = text.trim().toLowerCase();
+  if (ENGLISH_TEXT_SET.has(t)) return "en-US";
+  if (VIETNAMESE_TEXT_SET.has(t)) return "vi-VN";
+  return hasVietnameseDiacritics(t) ? "vi-VN" : "en-US";
+}
+
 // Mo rong vai tu viet tat de TTS doc dung, khong doc nham thanh chu cai roi rac
 function normalizeForSpeech(text) {
   return text
@@ -93,32 +125,39 @@ function normalizeForSpeech(text) {
     .replace(/\bMs\b\.?/g, "Miss");
 }
 
-function speakNow(text, rate) {
+function speakNow(text, rate, lang) {
   window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(normalizeForSpeech(text));
-  u.lang = "en-US";
+  const targetLang = lang || "en-US";
+  const isVietnamese = targetLang.toLowerCase().startsWith("vi");
+  const voice = isVietnamese ? pickVietnameseVoice() : pickEnglishVoice();
+  if (isVietnamese && !voice) {
+    // May khong co giong tieng Viet -> khong doc, tranh doc tieng Viet bang giong tieng Anh (sai hoan toan)
+    return;
+  }
+  const cleanText = isVietnamese ? text : normalizeForSpeech(text);
+  const u = new SpeechSynthesisUtterance(cleanText);
+  u.lang = targetLang;
   u.rate = rate || 0.8;
-  const voice = pickEnglishVoice();
   if (voice) u.voice = voice;
   window.speechSynthesis.speak(u);
 }
 
-function speak(text, rate) {
+function speak(text, rate, lang) {
   if (!("speechSynthesis" in window)) return;
   if (voicesReady) {
-    speakNow(text, rate);
+    speakNow(text, rate, lang);
   } else {
     // Tren mot so trinh duyet di dong, danh sach giong chua nap kip
     // -> thu nap lai va doi toi da ~600ms truoc khi doc
     loadVoices();
-    if (voicesReady) { speakNow(text, rate); return; }
+    if (voicesReady) { speakNow(text, rate, lang); return; }
     let waited = 0;
     const timer = setInterval(() => {
       loadVoices();
       waited += 100;
       if (voicesReady || waited >= 600) {
         clearInterval(timer);
-        speakNow(text, rate);
+        speakNow(text, rate, lang);
       }
     }, 100);
   }
@@ -437,7 +476,8 @@ function answerQuiz(i, btn) {
     btn.classList.add("correct");
     state.quiz.correct++;
     playCorrectSound();
-    setTimeout(() => speak(q.options[q.answer], 0.78), 1000);
+    const answerText = q.options[q.answer];
+    setTimeout(() => speak(answerText, 0.78, detectAnswerLang(answerText)), 1000);
     nextDelay = 2300;
   } else {
     btn.classList.add("wrong");
@@ -522,7 +562,8 @@ function answerReview(i, btn) {
     btn.classList.add("correct");
     state.quiz.correct++;
     playCorrectSound();
-    setTimeout(() => speak(q.options[q.answer], 0.78), 1000);
+    const answerText = q.options[q.answer];
+    setTimeout(() => speak(answerText, 0.78, detectAnswerLang(answerText)), 1000);
     nextDelay = 2300;
   } else {
     btn.classList.add("wrong");
