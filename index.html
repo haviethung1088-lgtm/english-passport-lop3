@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Hộ chiếu Hành trình Tiếng Anh - Lớp 3</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app">
+
+  <!-- ===================== LOGIN ===================== -->
+  <div class="screen active" id="screen-login">
+    <div class="login-wrap">
+      <div class="passport-card">
+        <div class="passport-emblem">✈️📘</div>
+        <h1>Hộ chiếu Hành trình</h1>
+        <div class="sub">Tiếng Anh lớp 3 · Global Success</div>
+        <form id="login-form">
+          <div class="field">
+            <label>Họ và tên học sinh</label>
+            <input type="text" id="input-name" placeholder="Ví dụ: Nguyễn Văn An" required />
+          </div>
+          <div class="field">
+            <label>Lớp (không bắt buộc)</label>
+            <input type="text" id="input-class" placeholder="Ví dụ: 3A2" />
+          </div>
+          <button type="submit" class="btn-primary">Bắt đầu hành trình ✈️</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== TOPBAR (shown on inner screens) ===================== -->
+  <div class="topbar" id="topbar-map">
+    <div class="brand"><span class="plane">✈️</span><span>Hành trình Anh ngữ</span></div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div class="stamp-count">🎟️ <span id="stamp-count">0 / 21</span></div>
+      <button class="back-btn" id="logout-btn" title="Đổi học sinh">👤</button>
+    </div>
+  </div>
+
+  <!-- ===================== MAP / HOME ===================== -->
+  <div class="screen" id="screen-map">
+    <div class="map-header">
+      <div class="greeting">Xin chào, <b id="greeting-name"></b> 👋</div>
+      <h1>Chọn một chặng để khám phá</h1>
+    </div>
+    <div id="map-container"></div>
+  </div>
+
+  <!-- ===================== UNIT DETAIL ===================== -->
+  <div class="screen" id="screen-unit">
+    <button class="back-btn" onclick="goHome()" style="margin-bottom:14px;">←</button>
+    <div class="unit-hero">
+      <div class="icon" id="unit-icon"></div>
+      <h1 id="unit-title-en"></h1>
+      <div class="vi" id="unit-title-vi"></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn" id="tabbtn-vocab" onclick="switchTab('vocab')">📖 Từ vựng</button>
+      <button class="tab-btn" id="tabbtn-practice" onclick="switchTab('practice')">✍️ Luyện tập</button>
+      <button class="tab-btn ext" id="tabbtn-ext" onclick="switchTab('ext')">🌟 Mở rộng</button>
+    </div>
+
+    <!-- TAB: VOCAB -->
+    <div class="tab-panel" id="panel-vocab">
+      <div class="section-label">Từ vựng cơ bản (chạm thẻ để nghe &amp; lật nghĩa)</div>
+      <div class="card-grid" id="vocab-grid"></div>
+      <div class="section-label">Mẫu câu</div>
+      <div id="patterns-box"></div>
+    </div>
+
+    <!-- TAB: PRACTICE -->
+    <div class="tab-panel" id="panel-practice">
+      <div class="section-label">📝 Luyện tập cơ bản</div>
+      <p id="practice-core-info" style="color:var(--ink-soft); font-size:14px;"></p>
+      <button class="btn-primary" onclick="startQuiz('core')">Bắt đầu luyện tập cơ bản</button>
+      <div class="section-label">🌟 Luyện tập nâng cao</div>
+      <p id="practice-ext-info" style="color:var(--ink-soft); font-size:14px;"></p>
+      <button class="btn-secondary" onclick="startQuiz('ext')">Bắt đầu luyện tập nâng cao</button>
+    </div>
+
+    <!-- TAB: EXTENSION -->
+    <div class="tab-panel" id="panel-ext">
+      <div class="section-label">🌟 Từ vựng mở rộng</div>
+      <div class="card-grid" id="ext-vocab-grid"></div>
+      <div class="section-label">📘 Mẹo ngữ pháp</div>
+      <div class="grammar-box" id="grammar-box"></div>
+      <div class="section-label">📖 Đọc hiểu nâng cao</div>
+      <div class="reading-box" id="reading-box"></div>
+    </div>
+  </div>
+
+  <!-- ===================== QUIZ ===================== -->
+  <div class="screen" id="screen-quiz">
+    <button class="back-btn" onclick="goHome()" style="margin-bottom:14px;">←</button>
+    <div class="quiz-progress" id="quiz-progress"></div>
+    <div class="quiz-q" id="quiz-question"></div>
+    <div id="quiz-options"></div>
+  </div>
+
+  <!-- ===================== RESULT ===================== -->
+  <div class="screen" id="screen-result">
+    <div class="result-box">
+      <div class="stars" id="result-stars"></div>
+      <h2 id="result-score"></h2>
+      <p id="result-msg"></p>
+      <button class="btn-primary" onclick="retryQuiz()">Làm lại</button>
+      <button class="btn-secondary" onclick="backToUnitFromResult()">Về Unit</button>
+      <button class="btn-secondary" onclick="goHome()">Về bản đồ</button>
+    </div>
+  </div>
+
+  <!-- ===================== PROGRESS ===================== -->
+  <div class="screen" id="screen-progress">
+    <div class="map-header">
+      <h1>🎟️ Sổ tích sao</h1>
+      <div class="greeting" id="progress-summary"></div>
+    </div>
+    <div id="progress-list"></div>
+  </div>
+
+  <!-- ===================== BOTTOM NAV ===================== -->
+  <div class="bottom-nav">
+    <button class="nav-btn active" id="nav-home"><span class="ic">🗺️</span>Bản đồ</button>
+    <button class="nav-btn" id="nav-progress"><span class="ic">🎟️</span>Tiến độ</button>
+  </div>
+
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
